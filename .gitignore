@@ -219,12 +219,12 @@ desktop.ini
 .env.production.local
 
 # Additional ML/AI patterns
-*.pkl
-*.joblib
-*.h5
-*.hdf5
-*.model
-*.weights
+# *.pkl
+# *.joblib
+# *.h5
+# *.hdf5
+# *.model
+# *.weights
 
 # Additional documentation patterns
 docs/_build/
