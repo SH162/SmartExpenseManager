@@ -135,7 +135,7 @@ dmypy.json
 expenses.db
 
 # Model files (can be regenerated)
-models/*.pkl
+# models/*.pkl
 
 # IDE files
 .vscode/
