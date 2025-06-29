@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}مدير المصروفات الشخصية - الصفحة الرئيسية{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- شريط التنقل للزوار -->
+    <nav class="navbar navbar-expand-lg mb-5">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-wallet me-2"></i>
+                مدير المصروفات
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link fw-semibold" href="{{ url_for('login') }}">
+                    <i class="fas fa-sign-in-alt me-1"></i>
+                    تسجيل الدخول
+                </a>
+                <a class="nav-link fw-semibold" href="{{ url_for('register') }}">
+                    <i class="fas fa-user-plus me-1"></i>
+                    التسجيل
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- القسم الرئيسي -->
+    <div class="row align-items-center min-vh-75">
+        <div class="col-lg-6">
+            <div class="text-center text-lg-start">
+                <h1 class="display-4 fw-bold text-gradient mb-4">
+                    <i class="fas fa-wallet me-3"></i>
+                    مدير المصروفات الشخصية
+                </h1>
+                <p class="lead mb-4">
+                    تتبع دخلك ونفقاتك بسهولة مع أدوات تحليل متقدمة لتحسين إدارتك المالية
+                </p>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div class="transaction-icon me-3">
+                                <i class="fas fa-chart-pie"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">تحليل ذكي</h5>
+                                <small class="text-muted">رسوم بيانية تفاعلية</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div class="transaction-icon me-3" style="background: var(--gradient-success);">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">حماية البيانات</h5>
+                                <small class="text-muted">تشفير آمن للمعلومات</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div class="transaction-icon me-3" style="background: var(--gradient-info);">
+                                <i class="fas fa-mobile-alt"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">تصميم متجاوب</h5>
+                                <small class="text-muted">يعمل على جميع الأجهزة</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div class="transaction-icon me-3" style="background: var(--gradient-warning);">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">تحديث فوري</h5>
+                                <small class="text-muted">إحصائيات مباشرة</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-4 me-md-2">
+                        <i class="fas fa-user-plus me-2"></i>
+                        ابدأ الآن
+                    </a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg px-4">
+                        <i class="fas fa-sign-in-alt me-2"></i>
+                        تسجيل الدخول
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="text-center">
+                <div class="card">
+                    <div class="card-body p-5">
+                        <i class="fas fa-wallet fa-8x text-gradient mb-4"></i>
+                        <h3 class="mb-3">إدارة مالية ذكية</h3>
+                        <p class="text-muted">منصة شاملة لإدارة مصروفاتك الشخصية</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- قسم المميزات -->
+    <div class="row mt-5 pt-5">
+        <div class="col-12 text-center mb-5">
+            <h2 class="fw-bold text-gradient">المميزات الرئيسية</h2>
+            <p class="text-muted">كل ما تحتاجه لإدارة أموالك بذكاء</p>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="transaction-icon mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                    <h5 class="card-title">تسجيل المعاملات</h5>
+                    <p class="card-text">سجل دخلك ونفقاتك بسهولة مع تصنيفات مرنة ووصف تفصيلي</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="transaction-icon mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem; background: var(--gradient-success);">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h5 class="card-title">تحليل متقدم</h5>
+                    <p class="card-text">رسوم بيانية تفاعلية لتحليل سلوكك المالي وتحديد الأنماط</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="transaction-icon mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem; background: var(--gradient-info);">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h5 class="card-title">تقارير شاملة</h5>
+                    <p class="card-text">تقارير شهرية وسنوية مفصلة لمساعدتك في اتخاذ قرارات مالية أفضل</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- قسم إضافي -->
+    <div class="row mt-5">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="transaction-icon me-3" style="background: var(--gradient-warning);">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <h5 class="mb-0">النصائح</h5>
+                    </div>
+                    <p class="text-muted">احصل على نصائح مالية مفيدة لتحسين إدارة أموالك وتحقيق أهدافك المالية</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="transaction-icon me-3" style="background: var(--gradient-teal);">
+                            <i class="fas fa-bullseye"></i>
+                        </div>
+                        <h5 class="mb-0">الأهداف المالية</h5>
+                    </div>
+                    <p class="text-muted">حدد أهدافك المالية وتتبع تقدمك نحو تحقيقها</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,373 @@
+{% extends "base.html" %}
+
+{% block title %}التقارير والرسوم البيانية - مدير المصروفات{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- رسائل التنبيه -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- العنوان -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-gradient mb-4">
+                <i class="fas fa-chart-bar me-2"></i>
+                التقارير والرسوم البيانية
+            </h2>
+        </div>
+    </div>
+
+    <!-- إحصائيات عامة -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card bg-gradient-success text-white">
+                <div class="card-body text-center">
+                    <h6 class="text-white-50 mb-2">إجمالي الدخل</h6>
+                    <h4 class="mb-0">{{ format_currency(total_income) }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card bg-gradient-danger text-white">
+                <div class="card-body text-center">
+                    <h6 class="text-white-50 mb-2">إجمالي المصروفات</h6>
+                    <h4 class="mb-0">{{ format_currency(total_expenses) }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card bg-gradient-info text-white">
+                <div class="card-body text-center">
+                    <h6 class="text-white-50 mb-2">الرصيد الصافي</h6>
+                    <h4 class="mb-0">{{ format_currency(total_income - total_expenses) }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card bg-gradient-warning text-white">
+                <div class="card-body text-center">
+                    <h6 class="text-white-50 mb-2">نسبة الادخار</h6>
+                    <h4 class="mb-0">
+                        {{ "%.1f"|format((total_income - total_expenses) / total_income * 100) if total_income > 0 else 0 }}%
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- رسالة حالة البيانات -->
+    {% if total_income > 0 or total_expenses > 0 %}
+    <div class="alert alert-info">
+        <p>تم تحميل البيانات بنجاح.</p>
+    </div>
+    {% else %}
+    <div class="alert alert-warning">
+        <p>لا توجد بيانات لعرضها. يرجى إضافة معاملات جديدة.</p>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- رسم بياني للفئات -->
+        <div class="col-lg-6 mb-4">
+            <div class="card chart-card">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        توزيع المصروفات حسب الفئة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height: 400px;">
+                        <canvas id="categoryChart"></canvas>
+                        <div id="categoryChartLoading" class="text-center text-muted" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                            <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                            <p>جاري تحميل البيانات...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- رسم بياني شهري -->
+        <div class="col-lg-6 mb-4">
+            <div class="card chart-card">
+                <div class="card-header bg-gradient-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        الدخل والمصروفات الشهرية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height: 400px;">
+                        <canvas id="monthlyChart"></canvas>
+                        <div id="monthlyChartLoading" class="text-center text-muted" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                            <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                            <p>جاري تحميل البيانات...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- البيانات الشهرية -->
+    {% if monthly_data %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-gradient-warning text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        البيانات الشهرية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>الشهر</th>
+                                    <th>الدخل</th>
+                                    <th>المصروفات</th>
+                                    <th>الرصيد</th>
+                                    <th>نسبة الادخار</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for month_data in monthly_data %}
+                                {% set balance = month_data.income - month_data.expense %}
+                                {% set savings_rate = (balance / month_data.income * 100) if month_data.income > 0 else 0 %}
+                                <tr class="monthly-row">
+                                    <td>
+                                        <span class="month-badge">{{ month_data.month }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold income">{{ format_currency(month_data.income) }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold expense">{{ format_currency(month_data.expense) }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold {% if balance >= 0 %}income{% else %}expense{% endif %}">
+                                            {{ format_currency(balance) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if savings_rate >= 20 %}bg-success{% elif savings_rate >= 10 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ "%.1f"|format(savings_rate) }}%
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // إعداد الرسوم البيانية
+    setupCharts();
+});
+
+function setupCharts() {
+    // رسم بياني للفئات
+    const categoryCtx = document.getElementById('categoryChart');
+    const categoryLoading = document.getElementById('categoryChartLoading');
+    
+    if (categoryCtx) {
+        fetch('/api/chart_data')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                categoryLoading.style.display = 'none';
+                
+                if (!data || !data.labels || data.labels.length === 0) {
+                    categoryCtx.parentElement.innerHTML = '<div class="text-center text-muted"><p>لا توجد بيانات كافية لعرض الرسم البياني</p></div>';
+                    return;
+                }
+
+                const colors = [
+                    '#4f46e5', '#7c3aed', '#10b981', '#f59e0b', '#ef4444',
+                    '#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6'
+                ];
+
+                new Chart(categoryCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            data: data.data,
+                            backgroundColor: colors.slice(0, data.labels.length),
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true,
+                                    font: {
+                                        family: 'Cairo',
+                                        size: 12
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${label}: ${formatCurrency(value)} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error loading chart data:', error);
+                categoryLoading.style.display = 'none';
+                categoryCtx.parentElement.innerHTML = '<div class="text-center text-muted"><p>خطأ في تحميل البيانات</p><button class="btn btn-primary btn-sm" onclick="setupCharts()">إعادة المحاولة</button></div>';
+            });
+    }
+
+    // رسم بياني شهري
+    const monthlyCtx = document.getElementById('monthlyChart');
+    const monthlyLoading = document.getElementById('monthlyChartLoading');
+    
+    if (monthlyCtx) {
+        fetch('/api/monthly_data')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                monthlyLoading.style.display = 'none';
+                
+                if (!data || data.length === 0) {
+                    monthlyCtx.parentElement.innerHTML = '<div class="text-center text-muted"><p>لا توجد بيانات كافية لعرض الرسم البياني</p></div>';
+                    return;
+                }
+
+                const labels = data.map(item => item.month);
+                const incomeData = data.map(item => item.income);
+                const expenseData = data.map(item => item.expense);
+
+                new Chart(monthlyCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'الدخل',
+                            data: incomeData,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4
+                        }, {
+                            label: 'المصروفات',
+                            data: expenseData,
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    font: {
+                                        family: 'Cairo',
+                                        size: 12
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.dataset.label || '';
+                                        const value = context.parsed.y;
+                                        return `${label}: ${formatCurrency(value)}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return formatCurrency(value);
+                                    },
+                                    font: {
+                                        family: 'Cairo'
+                                    }
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    font: {
+                                        family: 'Cairo'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error loading monthly data:', error);
+                monthlyLoading.style.display = 'none';
+                monthlyCtx.parentElement.innerHTML = '<div class="text-center text-muted"><p>خطأ في تحميل البيانات</p><button class="btn btn-primary btn-sm" onclick="setupCharts()">إعادة المحاولة</button></div>';
+            });
+    }
+}
+
+// دالة تنسيق العملة
+function formatCurrency(amount) {
+    if (isNaN(amount)) {
+        return 'د.ل 0.00';
+    }
+    return 'د.ل ' + parseFloat(amount).toLocaleString('ar-LY', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+
+{% block title %}إضافة معاملة جديدة - مدير المصروفات{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- رسائل التنبيه -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- العنوان -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-gradient mb-4">
+                <i class="fas fa-plus me-2"></i>
+                إضافة معاملة جديدة
+            </h2>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card transaction-form-card">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        تفاصيل المعاملة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="transactionForm">
+                        <!-- نوع المعاملة -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <label class="form-label fw-bold">نوع المعاملة</label>
+                                <div class="d-flex gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="type" id="income" value="income" checked>
+                                        <label class="form-check-label" for="income">
+                                            <i class="fas fa-arrow-up text-success me-1"></i>
+                                            دخل
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="type" id="expense" value="expense">
+                                        <label class="form-check-label" for="expense">
+                                            <i class="fas fa-arrow-down text-danger me-1"></i>
+                                            مصروف
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- المبلغ -->
+                            <div class="col-md-6 mb-3">
+                                <label for="amount" class="form-label fw-bold">
+                                    <i class="fas fa-money-bill-wave me-1"></i>
+                                    المبلغ
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">د.ل</span>
+                                    <input type="number" class="form-control" id="amount" name="amount" 
+                                           step="0.01" min="0" required placeholder="أدخل المبلغ">
+                                </div>
+                                <div class="form-text">أدخل المبلغ بالدينار الليبي</div>
+                            </div>
+
+                            <!-- التاريخ -->
+                            <div class="col-md-6 mb-3">
+                                <label for="date" class="form-label fw-bold">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    التاريخ
+                                </label>
+                                <input type="date" class="form-control" id="date" name="date" 
+                                       value="{{ today.strftime('%Y-%m-%d') }}" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- الفئة -->
+                            <div class="col-md-6 mb-3">
+                                <label for="category" class="form-label fw-bold">
+                                    <i class="fas fa-tag me-1"></i>
+                                    الفئة
+                                </label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="">اختر الفئة</option>
+                                    <optgroup label="المصروفات الأساسية">
+                                        <option value="الطعام والشراب">الطعام والشراب</option>
+                                        <option value="المواصلات">المواصلات</option>
+                                        <option value="الفواتير">الفواتير (كهرباء، ماء، إنترنت)</option>
+                                        <option value="الإيجار">الإيجار</option>
+                                    </optgroup>
+                                    <optgroup label="المصروفات الشخصية">
+                                        <option value="التسوق">التسوق</option>
+                                        <option value="الترفيه">الترفيه</option>
+                                        <option value="الصحة">الصحة والطب</option>
+                                        <option value="التعليم">التعليم</option>
+                                    </optgroup>
+                                    <optgroup label="المصروفات الأخرى">
+                                        <option value="السفر">السفر</option>
+                                        <option value="الهدايا">الهدايا</option>
+                                        <option value="الصيانة">الصيانة والإصلاح</option>
+                                        <option value="أخرى">أخرى</option>
+                                    </optgroup>
+                                    <optgroup label="الدخل">
+                                        <option value="الراتب">الراتب</option>
+                                        <option value="العمل الحر">العمل الحر</option>
+                                        <option value="الاستثمارات">الاستثمارات</option>
+                                        <option value="الهدايا">الهدايا والمنح</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            <!-- فئة مخصصة -->
+                            <div class="col-md-6 mb-3">
+                                <label for="customCategory" class="form-label fw-bold">
+                                    <i class="fas fa-plus me-1"></i>
+                                    فئة مخصصة
+                                </label>
+                                <input type="text" class="form-control" id="customCategory" 
+                                       placeholder="أدخل فئة مخصصة (اختياري)">
+                                <div class="form-text">أدخل فئة جديدة إذا لم تكن موجودة في القائمة</div>
+                            </div>
+                        </div>
+
+                        <!-- الوصف -->
+                        <div class="mb-4">
+                            <label for="description" class="form-label fw-bold">
+                                <i class="fas fa-align-left me-1"></i>
+                                الوصف (اختياري)
+                            </label>
+                            <textarea class="form-control" id="description" name="description" 
+                                      rows="3" placeholder="أضف وصفاً مفصلاً للمعاملة..."></textarea>
+                        </div>
+
+                        <!-- أزرار الإجراءات -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <button type="submit" class="btn btn-success w-100 save-btn">
+                                    <i class="fas fa-save me-2"></i>
+                                    حفظ المعاملة
+                                </button>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <a href="{{ url_for('transactions') }}" class="btn btn-outline-secondary w-100">
+                                    <i class="fas fa-times me-2"></i>
+                                    إلغاء
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- نصائح سريعة -->
+            <div class="card mt-4">
+                <div class="card-header bg-gradient-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        نصائح لإضافة معاملات دقيقة
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="tip-item">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <strong>سجل فوراً:</strong> سجل معاملاتك فور حدوثها لضمان الدقة
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="tip-item">
+                                <i class="fas fa-tag text-primary me-2"></i>
+                                <strong>اختر الفئة المناسبة:</strong> استخدم الفئات المناسبة لتحليل أفضل
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="tip-item">
+                                <i class="fas fa-align-left text-warning me-2"></i>
+                                <strong>أضف وصفاً:</strong> الوصف يساعدك في تذكر تفاصيل المعاملة
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="tip-item">
+                                <i class="fas fa-calendar text-info me-2"></i>
+                                <strong>التاريخ الصحيح:</strong> تأكد من تحديد التاريخ الصحيح للمعاملة
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('transactionForm');
+    const typeInputs = document.querySelectorAll('input[name="type"]');
+    const categorySelect = document.getElementById('category');
+    const customCategoryInput = document.getElementById('customCategory');
+    const amountInput = document.getElementById('amount');
+    const dateInput = document.getElementById('date');
+
+    // تحديث الفئات حسب نوع المعاملة
+    function updateCategories() {
+        const selectedType = document.querySelector('input[name="type"]:checked').value;
+        const options = categorySelect.querySelectorAll('option');
+        
+        options.forEach(option => {
+            if (option.value === '') return; // تجاهل الخيار الافتراضي
+            
+            const optgroup = option.parentElement;
+            if (selectedType === 'income') {
+                // إظهار فئات الدخل فقط
+                if (optgroup.label === 'الدخل') {
+                    option.style.display = '';
+                    optgroup.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                    optgroup.style.display = 'none';
+                }
+            } else {
+                // إظهار فئات المصروفات فقط
+                if (optgroup.label !== 'الدخل') {
+                    option.style.display = '';
+                    optgroup.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                    optgroup.style.display = 'none';
+                }
+            }
+        });
+        
+        // إعادة تعيين القيمة المحددة
+        categorySelect.value = '';
+    }
+
+    // تحديث الفئات عند تغيير نوع المعاملة
+    typeInputs.forEach(input => {
+        input.addEventListener('change', updateCategories);
+    });
+
+    // إضافة فئة مخصصة
+    customCategoryInput.addEventListener('input', function() {
+        if (this.value.trim()) {
+            // إزالة الخيار "أخرى" إذا كان موجوداً
+            const otherOption = Array.from(categorySelect.options).find(option => option.value === 'أخرى');
+            if (otherOption) {
+                otherOption.remove();
+            }
+            
+            // إضافة الفئة المخصصة
+            const customOption = new Option(this.value, this.value);
+            categorySelect.add(customOption);
+            categorySelect.value = this.value;
+        }
+    });
+
+    // التحقق من صحة المبلغ
+    amountInput.addEventListener('input', function() {
+        const value = parseFloat(this.value);
+        if (value < 0) {
+            this.setCustomValidity('المبلغ يجب أن يكون موجباً');
+        } else if (value > 999999999) {
+            this.setCustomValidity('المبلغ كبير جداً');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+
+    // التحقق من صحة التاريخ
+    dateInput.addEventListener('change', function() {
+        const selectedDate = new Date(this.value);
+        const currentDate = new Date();
+        const maxDate = new Date();
+        maxDate.setFullYear(currentDate.getFullYear() + 1); // السماح بسنة واحدة في المستقبل
+        
+        if (selectedDate > maxDate) {
+            this.setCustomValidity('لا يمكن تحديد تاريخ في المستقبل البعيد');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+
+    // تحسين تجربة المستخدم للنموذج
+    form.addEventListener('submit', function(e) {
+        // التحقق من صحة البيانات قبل الإرسال
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // إظهار رسالة خطأ
+            showNotification('يرجى التأكد من صحة جميع البيانات', 'danger');
+        } else {
+            // إظهار رسالة نجاح
+            showNotification('جاري حفظ المعاملة...', 'info');
+        }
+        
+        form.classList.add('was-validated');
+    });
+
+    // إضافة تأثيرات للعناصر
+    const formElements = document.querySelectorAll('.form-control, .form-select');
+    formElements.forEach(function(element) {
+        element.addEventListener('focus', function() {
+            this.parentElement.classList.add('focused');
+        });
+
+        element.addEventListener('blur', function() {
+            if (!this.value) {
+                this.parentElement.classList.remove('focused');
+            }
+        });
+    });
+
+    // تحديث الفئات عند تحميل الصفحة
+    updateCategories();
+});
+
+// دالة إظهار الإشعارات
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show`;
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // إزالة الإشعارات السابقة
+    document.querySelectorAll('.alert').forEach(alert => alert.remove());
+    
+    // إضافة الإشعار الجديد
+    document.querySelector('.container-fluid').insertBefore(notification, document.querySelector('.container-fluid').firstChild);
+    
+    // إزالة الإشعار تلقائياً بعد 5 ثوانٍ
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// تحسين تجربة المستخدم للراديو بوتونز
+document.querySelectorAll('input[type="radio"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        // إضافة تأثير بصري عند التحديد
+        const label = this.nextElementSibling;
+        label.style.transform = 'scale(1.05)';
+        setTimeout(() => {
+            label.style.transform = 'scale(1)';
+        }, 200);
+    });
+});
+</script>
+{% endblock %} 

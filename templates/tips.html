@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+
+{% block title %}النصائح المالية - مدير المصروفات{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- رسائل التنبيه -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- العنوان والإحصائيات -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="text-gradient mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    النصائح المالية
+                </h2>
+                <div class="btn-group" role="group">
+                    <form method="POST" action="{{ url_for('generate_tips') }}" class="d-inline">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-magic me-1"></i>
+                            توليد نصائح جديدة
+                        </button>
+                    </form>
+                    <a href="{{ url_for('get_ai_advice_route') }}" class="btn btn-success">
+                        <i class="fas fa-robot me-1"></i>
+                        نصيحة ذكية فورية
+                    </a>
+                    <a href="{{ url_for('get_ai_analysis_route') }}" class="btn btn-info">
+                        <i class="fas fa-chart-line me-1"></i>
+                        تحليل ذكي مفصل
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- إحصائيات النصائح -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card stat-card bg-gradient-primary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-lightbulb fa-2x mb-2"></i>
+                    <h4 class="mb-1">{{ total_tips }}</h4>
+                    <p class="mb-0">إجمالي النصائح</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card stat-card bg-gradient-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-eye fa-2x mb-2"></i>
+                    <h4 class="mb-1">{{ read_tips }}</h4>
+                    <p class="mb-0">النصائح المقروءة</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card stat-card bg-gradient-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                    <h4 class="mb-1">{{ applied_tips }}</h4>
+                    <p class="mb-0">النصائح المطبقة</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if tips %}
+        <!-- تصفية النصائح -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary active" data-filter="all">
+                                جميع النصائح
+                            </button>
+                            <button type="button" class="btn btn-outline-success" data-filter="applied">
+                                النصائح المطبقة
+                            </button>
+                            <button type="button" class="btn btn-outline-warning" data-filter="unread">
+                                النصائح غير المقروءة
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- النصائح مقسمة حسب الفئة -->
+        {% for category, category_tips in tips_by_category.items() %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-gradient-{{ 'primary' if category == 'spending' else 'success' if category == 'saving' else 'warning' if category == 'budget' else 'info' if category == 'goals' else 'danger' if category == 'ai_advice' else 'secondary' if category == 'ai_analysis' else 'primary' }} text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-{{ 'shopping-cart' if category == 'spending' else 'piggy-bank' if category == 'saving' else 'chart-pie' if category == 'budget' else 'bullseye' if category == 'goals' else 'robot' if category == 'ai_advice' else 'chart-line' if category == 'ai_analysis' else 'lightbulb' }} me-2"></i>
+                            {{ 'الإنفاق' if category == 'spending' else 'الادخار' if category == 'saving' else 'الميزانية' if category == 'budget' else 'الأهداف' if category == 'goals' else 'نصيحة ذكية' if category == 'ai_advice' else 'تحليل ذكي' if category == 'ai_analysis' else category }}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for tip in category_tips %}
+                            <div class="col-lg-6 mb-3 tip-item" 
+                                 data-status="{% if tip.is_applied %}applied{% elif tip.is_read %}read{% else %}unread{% endif %}">
+                                <div class="tip-card h-100 {% if tip.is_applied %}applied{% elif tip.is_read %}read{% else %}unread{% endif %}">
+                                    <div class="tip-header">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <h6 class="tip-title mb-1">{{ tip.title }}</h6>
+                                            <div class="tip-actions">
+                                                {% if tip.priority == 'high' %}
+                                                    <span class="badge bg-danger me-1">عالية</span>
+                                                {% elif tip.priority == 'medium' %}
+                                                    <span class="badge bg-warning me-1">متوسطة</span>
+                                                {% else %}
+                                                    <span class="badge bg-success me-1">منخفضة</span>
+                                                {% endif %}
+                                                
+                                                {% if tip.is_applied %}
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check"></i> مطبقة
+                                                    </span>
+                                                {% elif tip.is_read %}
+                                                    <span class="badge bg-info">
+                                                        <i class="fas fa-eye"></i> مقروءة
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">
+                                                        <i class="fas fa-exclamation"></i> جديدة
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>
+                                            {{ tip.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                        </small>
+                                    </div>
+                                    
+                                    <div class="tip-content mt-3">
+                                        <p class="mb-3">{{ tip.content }}</p>
+                                    </div>
+                                    
+                                    <div class="tip-footer">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            {% if not tip.is_read %}
+                                                <a href="{{ url_for('mark_tip_read', tip_id=tip.id) }}" 
+                                                   class="btn btn-outline-info">
+                                                    <i class="fas fa-eye me-1"></i>
+                                                    تحديد كمقروءة
+                                                </a>
+                                            {% endif %}
+                                            
+                                            {% if not tip.is_applied %}
+                                                <a href="{{ url_for('mark_tip_applied', tip_id=tip.id) }}" 
+                                                   class="btn btn-outline-success">
+                                                    <i class="fas fa-check me-1"></i>
+                                                    تحديد كمطبقة
+                                                </a>
+                                            {% endif %}
+                                            
+                                            <a href="{{ url_for('delete_tip', tip_id=tip.id) }}" 
+                                               class="btn btn-outline-danger"
+                                               onclick="return confirm('هل أنت متأكد من حذف هذه النصيحة؟')">
+                                                <i class="fas fa-trash me-1"></i>
+                                                حذف
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <!-- حالة فارغة -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-lightbulb fa-4x text-muted mb-4"></i>
+                        <h4>لا توجد نصائح حالياً</h4>
+                        <p class="text-muted mb-4">اضغط على زر "توليد نصائح جديدة" للحصول على نصائح مخصصة بناءً على بياناتك المالية</p>
+                        <form method="POST" action="{{ url_for('generate_tips') }}" class="d-inline">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-magic me-2"></i>
+                                توليد نصائح جديدة
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.tip-card {
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.tip-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #007bff, #28a745);
+}
+
+.tip-card.unread {
+    border-left: 4px solid #ffc107;
+    background-color: #fff8e1;
+}
+
+.tip-card.read {
+    border-left: 4px solid #17a2b8;
+    background-color: #f8f9fa;
+}
+
+.tip-card.applied {
+    border-left: 4px solid #28a745;
+    background-color: #f8fff9;
+}
+
+.tip-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.tip-title {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.tip-content p {
+    color: #6c757d;
+    line-height: 1.6;
+}
+
+.tip-footer {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.btn-group .btn {
+    border-radius: 20px !important;
+    margin: 0 2px;
+}
+
+.stat-card {
+    border: none;
+    border-radius: 15px;
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.btn-group .btn.active {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+}
+
+.tip-item.hidden {
+    display: none;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تصفية النصائح
+    const filterButtons = document.querySelectorAll('[data-filter]');
+    const tipItems = document.querySelectorAll('.tip-item');
+    
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const filter = this.getAttribute('data-filter');
+            
+            // إزالة الفئة النشطة من جميع الأزرار
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            // إضافة الفئة النشطة للزر المحدد
+            this.classList.add('active');
+            
+            // تصفية العناصر
+            tipItems.forEach(item => {
+                const status = item.getAttribute('data-status');
+                
+                if (filter === 'all' || status === filter) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+        });
+    });
+    
+    // إضافة تأثيرات للبطاقات
+    const cards = document.querySelectorAll('.tip-card');
+    cards.forEach(function(card, index) {
+        card.style.animationDelay = (index * 0.1) + 's';
+    });
+});
+</script>
+{% endblock %} 

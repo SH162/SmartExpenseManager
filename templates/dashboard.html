@@ -1,0 +1,445 @@
+{% extends "base.html" %}
+
+{% block title %}لوحة التحكم - مدير المصروفات{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- رسائل التنبيه -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- الإحصائيات السريعة -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-gradient mb-4">
+                <i class="fas fa-tachometer-alt me-2"></i>
+                لوحة التحكم
+            </h2>
+        </div>
+    </div>
+
+    <!-- البطاقات الإحصائية -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card bg-gradient-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-2">إجمالي الدخل الشهري</h6>
+                            <h3 class="mb-0">{{ format_currency(monthly_income) }}</h3>
+                        </div>
+                        <div class="transaction-icon">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card bg-gradient-danger text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-2">إجمالي المصروفات الشهرية</h6>
+                            <h3 class="mb-0">{{ format_currency(monthly_expenses) }}</h3>
+                        </div>
+                        <div class="transaction-icon">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card bg-gradient-warning text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-2">مصروفات الأسبوع</h6>
+                            <h3 class="mb-0">{{ format_currency(weekly_expenses) }}</h3>
+                        </div>
+                        <div class="transaction-icon">
+                            <i class="fas fa-calendar-week"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card bg-gradient-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-2">مصروفات اليوم</h6>
+                            <h3 class="mb-0">{{ format_currency(daily_expenses) }}</h3>
+                        </div>
+                        <div class="transaction-icon">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- الإجراءات السريعة -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-bolt me-2"></i>
+                        الإجراءات السريعة
+                    </h5>
+                    <div class="quick-actions">
+                        <a href="{{ url_for('add_transaction') }}" class="quick-action-btn">
+                            <i class="fas fa-plus"></i>
+                            <div>إضافة معاملة</div>
+                        </a>
+                        <a href="{{ url_for('tips') }}" class="quick-action-btn">
+                            <i class="fas fa-lightbulb"></i>
+                            <div>النصائح</div>
+                        </a>
+                        <a href="{{ url_for('goals') }}" class="quick-action-btn">
+                            <i class="fas fa-bullseye"></i>
+                            <div>الأهداف المالية</div>
+                        </a>
+                        <a href="{{ url_for('reports') }}" class="quick-action-btn">
+                            <i class="fas fa-chart-bar"></i>
+                            <div>التقارير</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- المعاملات الأخيرة -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        المعاملات الأخيرة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_transactions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>التاريخ</th>
+                                        <th>الفئة</th>
+                                        <th>الوصف</th>
+                                        <th>المبلغ</th>
+                                        <th>النوع</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for transaction in recent_transactions %}
+                                    <tr class="transaction-row">
+                                        <td>
+                                            <span class="date-badge">
+                                                {{ transaction.date.strftime('%Y-%m-%d') }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ transaction.category }}</span>
+                                        </td>
+                                        <td>{{ transaction.description or 'لا يوجد وصف' }}</td>
+                                        <td class="currency-format">{{ transaction.amount }}</td>
+                                        <td>
+                                            {% if transaction.type == 'income' %}
+                                                <span class="badge bg-success">دخل</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">مصروف</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('transactions') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-list me-1"></i>
+                                عرض جميع المعاملات
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5>لا توجد معاملات حديثة</h5>
+                            <p>ابدأ بإضافة معاملاتك الأولى</p>
+                            <a href="{{ url_for('add_transaction') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>
+                                إضافة معاملة
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- الشريط الجانبي -->
+        <div class="col-lg-4">
+            <!-- أفضل الفئات إنفاقاً -->
+            <div class="card mb-4">
+                <div class="card-header bg-gradient-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        أفضل الفئات إنفاقاً
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if top_categories %}
+                        {% for category, total in top_categories %}
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <span class="badge bg-primary me-2">{{ category }}</span>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold currency-format">{{ total }}</div>
+                                <small class="text-muted">
+                                    {{ "%.1f"|format(total / monthly_expenses * 100) if monthly_expenses > 0 else 0 }}%
+                                </small>
+                            </div>
+                        </div>
+                        <div class="progress mb-3" style="height: 8px;">
+                            <div class="progress-bar bg-gradient-info" 
+                                 style="width: {{ (total / monthly_expenses * 100) if monthly_expenses > 0 else 0 }}%">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-chart-pie fa-2x mb-2"></i>
+                            <p>لا توجد بيانات كافية</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- حالة الميزانية -->
+            {% if budgets %}
+            <div class="card mb-4">
+                <div class="card-header bg-gradient-warning text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-piggy-bank me-2"></i>
+                        حالة الميزانية
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% for budget in budgets %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold">{{ budget.category }}</span>
+                            <small class="text-muted">
+                                {{ "%.1f"|format(budget.spent / budget.amount * 100) if budget.amount > 0 else 0 }}%
+                            </small>
+                        </div>
+                        <div class="budget-bar">
+                            {% set percentage = (budget.spent / budget.amount * 100) if budget.amount > 0 else 0 %}
+                            <div class="budget-fill {% if percentage > 90 %}bg-gradient-danger{% elif percentage > 70 %}bg-gradient-warning{% else %}bg-gradient-success{% endif %}" 
+                                 style="width: {{ percentage }}%">
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-1">
+                            <small class="text-muted">المنفق: {{ format_currency(budget.spent) }}</small>
+                            <small class="text-muted">المتبقي: {{ format_currency(budget.amount - budget.spent) }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('tips') }}" class="btn btn-sm btn-outline-warning">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            النصائح
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- الأهداف المالية النشطة -->
+            {% if active_goals %}
+            <div class="card">
+                <div class="card-header bg-gradient-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bullseye me-2"></i>
+                        الأهداف المالية النشطة
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% for goal in active_goals %}
+                    <div class="mb-3 p-3 bg-success-subtle rounded">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="mb-0">{{ goal.title }}</h6>
+                            <small class="text-muted">{{ goal.deadline.strftime('%Y-%m-%d') }}</small>
+                        </div>
+                        <div class="progress mb-2" style="height: 10px;">
+                            {% set percentage = (goal.current_amount / goal.target_amount * 100) if goal.target_amount > 0 else 0 %}
+                            <div class="progress-bar bg-gradient-success" style="width: {{ percentage }}%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                {{ format_currency(goal.current_amount) }} / {{ format_currency(goal.target_amount) }}
+                            </small>
+                            <small class="fw-bold">{{ "%.1f"|format(percentage) }}%</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('goals') }}" class="btn btn-sm btn-outline-success">
+                            <i class="fas fa-eye me-1"></i>
+                            عرض جميع الأهداف
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- النصائح الذكية -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-gradient-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-robot me-2"></i>
+                        النصائح الذكية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="ai-tip-card bg-gradient-primary text-white p-3 rounded">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-robot fa-2x me-3"></i>
+                                    <div>
+                                        <h6 class="mb-1">نصيحة ذكية فورية</h6>
+                                        <small>احصل على نصيحة مخصصة بناءً على بياناتك</small>
+                                    </div>
+                                </div>
+                                <a href="{{ url_for('get_ai_advice_route') }}" class="btn btn-light btn-sm">
+                                    <i class="fas fa-magic me-1"></i>
+                                    احصل على نصيحة
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="ai-tip-card bg-gradient-info text-white p-3 rounded">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-chart-line fa-2x me-3"></i>
+                                    <div>
+                                        <h6 class="mb-1">تحليل ذكي مفصل</h6>
+                                        <small>تحليل شامل لمصروفاتك ودخلك</small>
+                                    </div>
+                                </div>
+                                <a href="{{ url_for('get_ai_analysis_route') }}" class="btn btn-light btn-sm">
+                                    <i class="fas fa-chart-bar me-1"></i>
+                                    عرض التحليل
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('tips') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            عرض جميع النصائح
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نصائح مالية -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="tip-card">
+                <div class="tip-icon">
+                    <i class="fas fa-lightbulb"></i>
+                </div>
+                <h5 class="mb-3">نصائح مالية مفيدة</h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="tip-item">
+                            <i class="fas fa-chart-line text-success me-2"></i>
+                            <strong>تتبع مصروفاتك:</strong> سجل جميع معاملاتك لتحسين إدارة أموالك
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="tip-item">
+                            <i class="fas fa-piggy-bank text-warning me-2"></i>
+                            <strong>حدد ميزانية:</strong> ضع حدوداً لمصروفاتك في كل فئة
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="tip-item">
+                            <i class="fas fa-bullseye text-info me-2"></i>
+                            <strong>ضع أهدافاً:</strong> حدد أهدافاً مالية واضحة واعمل على تحقيقها
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تحديث تنسيق العملة
+    document.querySelectorAll('.currency-format').forEach(function(element) {
+        const amount = parseFloat(element.textContent);
+        element.textContent = formatCurrency(amount);
+    });
+
+    // إضافة تأثيرات للبطاقات
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(function(card, index) {
+        card.style.animationDelay = (index * 0.1) + 's';
+    });
+
+    // تحديث البيانات في الوقت الفعلي (كل 30 ثانية)
+    setInterval(function() {
+        // يمكن إضافة تحديث للبيانات هنا
+    }, 30000);
+});
+</script>
+
+<style>
+.ai-tip-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+}
+
+.ai-tip-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.ai-tip-card .btn {
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.ai-tip-card .btn:hover {
+    transform: scale(1.05);
+}
+</style>
+{% endblock %} 

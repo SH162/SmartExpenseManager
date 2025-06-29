@@ -1,0 +1,468 @@
+{% extends "base.html" %}
+
+{% block title %}سجل المعاملات - مدير المصروفات{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- رسائل التنبيه -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- العنوان والأزرار -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h2 class="text-gradient mb-4">
+                <i class="fas fa-list me-2"></i>
+                سجل المعاملات
+            </h2>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{{ url_for('add_transaction') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>
+                إضافة معاملة جديدة
+            </a>
+        </div>
+    </div>
+
+    <!-- إحصائيات سريعة -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card bg-gradient-success text-white">
+                <div class="card-body text-center">
+                    <h6 class="text-white-50 mb-2">إجمالي الدخل</h6>
+                    <h4 class="mb-0">{{format_currency( transactions.items|selectattr('type', 'equalto', 'income')|sum(attribute='amount')) }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card bg-gradient-danger text-white">
+                <div class="card-body text-center">
+                    <h6 class="text-white-50 mb-2">إجمالي المصروفات</h6>
+                    <h4 class="mb-0">{{format_currency( transactions.items|selectattr('type', 'equalto', 'expense')|sum(attribute='amount') )}}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card bg-gradient-info text-white">
+                <div class="card-body text-center">
+                    <h6 class="text-white-50 mb-2">الرصيد الصافي</h6>
+                     
+                    <h4 class="mb-0 ">{{ format_currency((transactions.items|selectattr('type', 'equalto', 'income')|sum(attribute='amount')) - (transactions.items|selectattr('type', 'equalto', 'expense')|sum(attribute='amount'))) }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card bg-gradient-warning text-white">
+                <div class="card-body text-center">
+                    <h6 class="text-white-50 mb-2">عدد المعاملات</h6>
+                    <h4 class="mb-0">{{ transactions.total }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- جدول المعاملات -->
+    <div class="card">
+        <div class="card-header bg-gradient-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-table me-2"></i>
+                جميع المعاملات
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if transactions.items %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>التاريخ</th>
+                                <th>الفئة</th>
+                                <th>الوصف</th>
+                                <th>المبلغ</th>
+                                <th>النوع</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions.items %}
+                            <tr class="transaction-row">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="transaction-icon me-3">
+                                            {% if transaction.type == 'income' %}
+                                                <i class="fas fa-arrow-up"></i>
+                                            {% else %}
+                                                <i class="fas fa-arrow-down"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ transaction.date.strftime('%Y-%m-%d') }}</div>
+                                            <small class="text-muted">{{ transaction.date.strftime('%H:%M') }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ transaction.category }}</span>
+                                </td>
+                                <td>
+                                    <div>
+                                        <div class="fw-semibold">{{ transaction.description or 'لا يوجد وصف' }}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="fw-bold format_currency( {%  if transaction.type == 'income' %}income{% else %}expense{% endif %})">
+                                        {{ transaction.amount }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if transaction.type == 'income' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-plus me-1"></i>
+                                            دخل
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-minus me-1"></i>
+                                            مصروف
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn bg-info" 
+                                                data-bs-toggle="tooltip" 
+                                                title="عرض التفاصيل"
+                                                onclick="viewTransaction({{ transaction.id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="action-btn bg-warning" 
+                                                data-bs-toggle="tooltip" 
+                                                title="تعديل"
+                                                onclick="editTransaction({{ transaction.id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="action-btn bg-danger" 
+                                                data-bs-toggle="tooltip" 
+                                                title="حذف"
+                                                onclick="deleteTransaction({{ transaction.id }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ترقيم الصفحات -->
+                {% if transactions.pages > 1 %}
+                <div class="pagination-wrapper">
+                    <nav aria-label="ترقيم الصفحات">
+                        <ul class="pagination">
+                            {% if transactions.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('transactions', page=transactions.prev_num) }}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for page_num in transactions.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != transactions.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('transactions', page=page_num) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if transactions.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('transactions', page=transactions.next_num) }}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+
+                <!-- معلومات الصفحة -->
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        عرض {{ transactions.items|length }} من {{ transactions.total }} معاملة
+                        (الصفحة {{ transactions.page }} من {{ transactions.pages }})
+                    </small>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h5>لا توجد معاملات</h5>
+                    <p>ابدأ بإضافة معاملاتك الأولى لتتبع مصروفاتك</p>
+                    <a href="{{ url_for('add_transaction') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>
+                        إضافة معاملة
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.action-buttons {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+}
+
+.action-btn {
+    width: 35px;
+    height: 35px;
+    border: none;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.action-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.action-btn.bg-info {
+    background-color: #17a2b8;
+}
+
+.action-btn.bg-warning {
+    background-color: #ffc107;
+}
+
+.action-btn.bg-danger {
+    background-color: #dc3545;
+}
+
+.transaction-row {
+    transition: all 0.3s ease;
+}
+
+.transaction-row:hover {
+    background-color: #f8f9fa;
+}
+
+.currency-format.income {
+    color: #28a745;
+}
+
+.currency-format.expense {
+    color: #dc3545;
+}
+
+.stat-card {
+    border: none;
+    border-radius: 15px;
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 0;
+}
+
+.pagination-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.text-gradient {
+    background: linear-gradient(45deg, #007bff, #28a745);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+</style>
+
+<!-- Modal عرض التفاصيل -->
+<div class="modal fade" id="transactionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle me-2"></i>
+                    تفاصيل المعاملة
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="transactionDetails">
+                <!-- سيتم ملء المحتوى بواسطة JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// دالة تنسيق العملة
+function formatCurrency(amount) {
+ 
+    const formattedNumber = new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: 3,
+        maximumFractionDigits: 3
+    }).format(amount);
+    return formattedNumber + ' د.ل';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // تحديث تنسيق العملة
+    document.querySelectorAll('.currency-format').forEach(function(element) {
+        const amount = parseFloat(element.textContent);
+        element.textContent = formatCurrency(amount);
+    });
+
+    // تفعيل tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // إضافة تأثيرات للصفوف
+    document.querySelectorAll('.transaction-row').forEach(function(row) {
+        row.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.01)';
+            this.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
+        });
+
+        row.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+            this.style.boxShadow = 'none';
+        });
+    });
+
+    // تحسين تجربة المستخدم للجدول
+    const table = document.querySelector('.table');
+    if (table) {
+        table.addEventListener('scroll', function() {
+            // يمكن إضافة منطق إضافي هنا
+        });
+    }
+});
+
+// دالة عرض تفاصيل المعاملة
+function viewTransaction(transactionId) {
+    fetch(`/transaction/${transactionId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showNotification(data.error, 'danger');
+                return;
+            }
+            
+            const modal = new bootstrap.Modal(document.getElementById('transactionModal'));
+            const detailsContainer = document.getElementById('transactionDetails');
+            
+            detailsContainer.innerHTML = `
+                <div class="row">
+                    <div class="col-6">
+                        <strong>المعرف:</strong>
+                        <p>${data.id}</p>
+                    </div>
+                    <div class="col-6">
+                        <strong>التاريخ:</strong>
+                        <p>${data.date}</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <strong>الفئة:</strong>
+                        <p>${data.category}</p>
+                    </div>
+                    <div class="col-6">
+                        <strong>المبلغ:</strong>
+                        <p class="currency-format">${data.formatted_amount}</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <strong>النوع:</strong>
+                        <p>
+                            <span class="badge ${data.type === 'income' ? 'bg-success' : 'bg-danger'}">
+                                ${data.type === 'income' ? 'دخل' : 'مصروف'}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-6">
+                        <strong>الوصف:</strong>
+                        <p>${data.description}</p>
+                    </div>
+                </div>
+            `;
+            
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('حدث خطأ أثناء جلب تفاصيل المعاملة', 'danger');
+        });
+}
+
+// دالة تعديل المعاملة
+function editTransaction(transactionId) {
+    window.location.href = `/transaction/edit/${transactionId}`;
+}
+
+// دالة حذف المعاملة
+function deleteTransaction(transactionId) {
+    if (confirm('هل أنت متأكد من حذف هذه المعاملة؟')) {
+        window.location.href = `/transaction/delete/${transactionId}`;
+    }
+}
+
+// دالة إظهار الإشعارات
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show`;
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
+</script>
+{% endblock %} 

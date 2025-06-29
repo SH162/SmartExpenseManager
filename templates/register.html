@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}التسجيل - مدير المصروفات الشخصية{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5 col-xl-4">
+            <div class="card">
+                <div class="card-body p-5">
+                    <div class="text-center mb-5">
+                        <div class="transaction-icon mx-auto mb-4" style="width: 80px; height: 80px; font-size: 2rem; background: var(--gradient-success);">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <h2 class="fw-bold text-gradient mb-2">إنشاء حساب جديد</h2>
+                        <p class="text-muted">انضم إلينا لإدارة أموالك بذكاء وفعالية</p>
+                    </div>
+                    
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST">
+                        <div class="mb-4">
+                            <label for="username" class="form-label fw-semibold">
+                                <i class="fas fa-user me-2 text-primary"></i>
+                                اسم المستخدم
+                            </label>
+                            <input type="text" class="form-control" id="username" name="username" 
+                                   placeholder="أدخل اسم المستخدم" required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="email" class="form-label fw-semibold">
+                                <i class="fas fa-envelope me-2 text-primary"></i>
+                                البريد الإلكتروني
+                            </label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   placeholder="أدخل بريدك الإلكتروني" required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="password" class="form-label fw-semibold">
+                                <i class="fas fa-lock me-2 text-primary"></i>
+                                كلمة المرور
+                            </label>
+                            <input type="password" class="form-control" id="password" name="password" 
+                                   placeholder="أدخل كلمة المرور" required>
+                            <div class="form-text mt-2">
+                                <i class="fas fa-info-circle me-1 text-info"></i>
+                                يجب أن تكون كلمة المرور 6 أحرف على الأقل
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid mb-4">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>
+                                إنشاء الحساب
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center">
+                        <hr class="my-4">
+                        <p class="mb-0 text-muted">لديك حساب بالفعل؟ 
+                            <a href="{{ url_for('login') }}" class="text-decoration-none fw-semibold text-primary">
+                                تسجيل الدخول
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
